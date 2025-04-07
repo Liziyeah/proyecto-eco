@@ -20,11 +20,15 @@ app.use("/client-app1", express.static(path.join(__dirname, "../client-app1")));
 app.use("/app2", express.static(path.join(__dirname, "app2")));
 
 let users = [];
+let nextUserId = 1;
 
 app.post("/users", (req, res) => {
   const {userInput} = req.body;
-  users.push({userInput});
-  res.status(201).send({ message: "Registro completado" });
+  const userId = nextUserId;
+  nextUserId++;
+  
+  users.push({id: userId, username: userInput});
+  res.status(201).send({ message: "Registro completado", userId: userId });
   
 })
 
