@@ -16,21 +16,23 @@ const io = new Server(httpServer, {
 });
 
 app.use(express.json());
-app.use("/app1", express.static(path.join(__dirname, "app1")));
+app.use("/client-app1", express.static(path.join(__dirname, "../client-app1")));
 app.use("/app2", express.static(path.join(__dirname, "app2")));
 
 let users = [];
 
-app.get("/users", (req, res) => {
-  res.send(users);
-});
+app.post("/users", (req, res) => {
+  const {userInput} = req.body;
+  users.push({userInput});
+  res.status(201).send({ message: "Registro completado" });
+  
+})
 
 io.on("connection", (socket) => {
   socket.on("coordenadas", (data) => {
     console.log(data);
     io.emit("coordenadas", data);
   });
-  socket.on("notificar-a-todos", (data) => {});
 });
 
 httpServer.listen(5050);
