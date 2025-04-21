@@ -16,8 +16,8 @@ const io = new Server(httpServer, {
 });
 
 app.use(express.json());
-app.use("/client-app1", express.static(path.join(__dirname, "../client-app1")));
-app.use("/app2", express.static(path.join(__dirname, "app2")));
+app.use("/mobile", express.static(path.join(__dirname, "../public/mobile")));
+app.use("/desktop", express.static(path.join(__dirname, "app2")));
 
 let users = [];
 let nextUserId = 1;
