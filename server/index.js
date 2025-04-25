@@ -8,29 +8,34 @@ const app = express();
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
-  // esta es una instancia de Socket.io en nuestro servidor
-  path: "/rea-time",
+  path: "/real-time",
   cors: {
     origin: "*",
   },
 });
 
 app.use(express.json());
-app.use("/app1", express.static(path.join(__dirname, "app1")));
-app.use("/app2", express.static(path.join(__dirname, "app2")));
+app.use("/mobile", express.static(path.join(__dirname, "../public/mobile")));
+app.use("/desktop", express.static(path.join(__dirname, "../public/desktop")));
 
 let users = [];
+let nextUserId = 1;
 
-app.get("/users", (req, res) => {
-  res.send(users);
-});
+app.post("/users", (req, res) => {
+  const {userInput} = req.body;
+  const userId = nextUserId;
+  nextUserId++;
+  
+  users.push({id: userId, username: userInput});
+  res.status(201).send({ message: "Registro completado", userId: userId });
+  
+})
 
 io.on("connection", (socket) => {
   socket.on("coordenadas", (data) => {
     console.log(data);
     io.emit("coordenadas", data);
   });
-  socket.on("notificar-a-todos", (data) => {});
 });
 
 httpServer.listen(5050);
