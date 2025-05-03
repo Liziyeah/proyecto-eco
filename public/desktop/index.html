@@ -1,11 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rock & Sync</title>
-</head>
-<body>
-    
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rock & Sync</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <h1>Rock & Sync</h1>
+
+        <div class="room-info">
+            <h2>Room ID: <span id="roomId"></span></h2>
+            <div class="connection-status">
+                Connected clients: <span id="connectedClients">0</span>/<span
+                    id="maxClients"
+                    >2</span
+                >
+                <div id="roomStatus" class="status-badge status-available">
+                    Available
+                </div>
+            </div>
+        </div>
+
+        <div class="qr-container">
+            <h3>Scan this QR code to join with your mobile</h3>
+            <div id="qrcode"></div>
+            <p class="mobile-url" id="mobileUrl"></p>
+        </div>
+
+        <div id="gameArea">
+            <p>Waiting for mobile devices to connect...</p>
+        </div>
+
+        <script>
+            // Get room ID from URL
+            const params = new URLSearchParams(window.location.search);
+            const roomId = params.get('roomId');
+
+            if (!roomId) {
+                console.error('No room ID found in URL');
+                document.body.innerHTML = '<h1>Error: No room ID found</h1>';
+            } else {
+                // Display room ID
+                document.getElementById('roomId').textContent = roomId;
+
+                // Create QR code
+                const serverUrl = window.location.origin;
+                const mobileUrl = `${serverUrl}/mobile?roomId=${roomId}`;
+
+                // Generate QR code
+                const qrcode = new QRCode(document.getElementById('qrcode'), {
+                    text: mobileUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H,
+                });
+
+                // Display mobile URL
+                document.getElementById('mobileUrl').textContent = mobileUrl;
+
+                // Connect to Socket.IO
+                const socket = io({
+                    path: '/real-time',
+                });
+
+                socket.on('connect', () => {
+                    console.log('Connected to server');
+                    // Join the room
+                    socket.emit('join-room', roomId);
+                });
+
+                // Listen for room status updates
+                socket.on('room-status', (data) => {
+                    console.log('Room status update:', data);
+                    document.getElementById('connectedClients').textContent =
+                        data.connectedClients;
+                    document.getElementById('maxClients').textContent =
+                        data.maxClients;
+
+                    const roomStatusEl = document.getElementById('roomStatus');
+
+                    if (data.connectedClients >= data.maxClients) {
+                        roomStatusEl.textContent = 'Full';
+                        roomStatusEl.className = 'status-badge status-full';
+                    } else {
+                        roomStatusEl.textContent = 'Available';
+                        roomStatusEl.className =
+                            'status-badge status-available';
+                    }
+
+                    // Update game area
+                    const gameArea = document.getElementById('gameArea');
+                    if (data.connectedClients === 0) {
+                        gameArea.innerHTML =
+                            '<p>Waiting for mobile devices to connect...</p>';
+                    } else if (data.connectedClients < data.maxClients) {
+                        gameArea.innerHTML =
+                            '<p>Waiting for more players... ' +
+                            data.connectedClients +
+                            ' of ' +
+                            data.maxClients +
+                            ' connected.</p>';
+                    } else {
+                        gameArea.innerHTML =
+                            '<p>All players connected! Game ready to start.</p>';
+                    }
+                });
+
+                socket.on('coordenadas', (data) => {
+                    console.log('Received coordinates:', data);
+                    // Handle coordinates data here
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('Disconnected from server');
+                });
+            }
+        </script>
+    </body>
 </html>

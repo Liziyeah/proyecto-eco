@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,4 +12,113 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script type="module" src="app.js"></script>
 </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rock & Sync - Mobile</title>
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <div class="room-info">
+            <h2>Rock & Sync</h2>
+            <p>Room ID: <span id="roomId"></span></p>
+            <div id="connectionStatus" class="status-badge status-disconnected">
+                Connecting...
+            </div>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none">
+            Room is full! Please try another room.
+        </div>
+
+        <div id="controlArea" class="control-area">
+            <p>Touch and move to send coordinates</p>
+        </div>
+
+        <script>
+            // Get room ID from URL
+            const params = new URLSearchParams(window.location.search);
+            const roomId = params.get('roomId');
+
+            if (!roomId) {
+                document.body.innerHTML =
+                    '<div class="error-message">Error: No room ID provided</div>';
+            } else {
+                // Display room ID
+                document.getElementById('roomId').textContent = roomId;
+
+                // Connect to Socket.IO
+                const socket = io({
+                    path: '/real-time',
+                });
+
+                socket.on('connect', () => {
+                    console.log('Connected to server');
+                    const connectionStatus =
+                        document.getElementById('connectionStatus');
+                    connectionStatus.textContent = 'Connected';
+                    connectionStatus.className =
+                        'status-badge status-connected';
+
+                    // Join the room
+                    socket.emit('join-room', roomId);
+                });
+
+                socket.on('room-full', () => {
+                    console.log('Room is full');
+                    document.getElementById('errorMessage').style.display =
+                        'block';
+                    document.getElementById('controlArea').style.display =
+                        'none';
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('Disconnected from server');
+                    const connectionStatus =
+                        document.getElementById('connectionStatus');
+                    connectionStatus.textContent = 'Disconnected';
+                    connectionStatus.className =
+                        'status-badge status-disconnected';
+                });
+
+                // Handle touch events
+                const controlArea = document.getElementById('controlArea');
+
+                controlArea.addEventListener('touchstart', handleTouch);
+                controlArea.addEventListener('touchmove', handleTouch);
+                controlArea.addEventListener('touchend', () => {
+                    // Send touch end event
+                    socket.emit('coordenadas', {
+                        roomId: roomId,
+                        type: 'touchend',
+                        timestamp: Date.now(),
+                    });
+                });
+
+                function handleTouch(event) {
+                    event.preventDefault();
+
+                    const touch = event.touches[0];
+                    const rect = controlArea.getBoundingClientRect();
+
+                    // Calculate relative positions (0-1)
+                    const relativeX = (touch.clientX - rect.left) / rect.width;
+                    const relativeY = (touch.clientY - rect.top) / rect.height;
+
+                    // Send coordinates to server
+                    socket.emit('coordenadas', {
+                        roomId: roomId,
+                        type: event.type,
+                        x: relativeX,
+                        y: relativeY,
+                        timestamp: Date.now(),
+                    });
+                }
+            }
+        </script>
+    </body>
 </html>
