@@ -11,7 +11,15 @@ const createUser = async (req, res) => {
     res.send(response);
 };
 
+const updateUser = async (req, res) => {
+    const {id} = req.params;
+    const {username} = req.body;
+    const response = await updateUser(id, username);
+    res.send(response);
+};
+
 module.exports = {
     getUsers,
     createUser,
+    updateUser,
 }
