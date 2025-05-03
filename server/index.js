@@ -78,24 +78,49 @@ app.get('/api/room/:roomId', (req, res) => {
 io.on('connection', (socket) => {
     // Track which room this socket is part of
     let currentRoom = null;
+    let clientType = 'unknown'; // Can be 'desktop' or 'mobile'
 
-    socket.on('join-room', (roomId) => {
+    socket.on('join-room', (data) => {
+        // Extract roomId and client type
+        const roomId = typeof data === 'object' ? data.roomId : data;
+        const type = typeof data === 'object' ? data.type : 'mobile';
+
+        clientType = type;
+
         // Check if room exists
         if (!rooms[roomId]) {
             rooms[roomId] = {
                 id: roomId,
                 connectedClients: 0,
                 maxClients: 2,
+                desktopConnected: false,
             };
         }
 
-        // Check if room is full
+        // If this is a desktop client, just mark the room as having a desktop
+        if (type === 'desktop') {
+            socket.join(roomId);
+            currentRoom = roomId;
+            rooms[roomId].desktopConnected = true;
+
+            // Send current status to desktop
+            socket.emit('room-status', {
+                id: roomId,
+                connectedClients: rooms[roomId].connectedClients,
+                maxClients: rooms[roomId].maxClients,
+            });
+
+            console.log(`Desktop client joined room ${roomId}`);
+            return;
+        }
+
+        // For mobile clients, check if room is full
         if (rooms[roomId].connectedClients >= rooms[roomId].maxClients) {
             socket.emit('room-full');
             return;
         }
 
-        // Join the room
+        // Join the room (mobile client)
         socket.join(roomId);
         currentRoom = roomId;
         rooms[roomId].connectedClients++;
@@ -108,38 +133,41 @@ io.on('connection', (socket) => {
         });
 
         console.log(
-            `Client joined room ${roomId} - Connected: ${rooms[roomId].connectedClients}`
+            `Mobile client joined room ${roomId} - Connected: ${rooms[roomId].connectedClients}`
         );
-    });
-
-    socket.on('coordenadas', (data) => {
-        if (currentRoom) {
-            // Only emit to the specific room
-            io.to(currentRoom).emit('coordenadas', data);
-        }
     });
 
     socket.on('disconnect', () => {
         // Remove from room when user disconnects
         if (currentRoom && rooms[currentRoom]) {
-            rooms[currentRoom].connectedClients--;
+            // Only decrease counter for mobile clients
+            if (clientType === 'mobile') {
+                rooms[currentRoom].connectedClients--;
 
-            // Notify remaining users
-            io.to(currentRoom).emit('room-status', {
-                id: currentRoom,
-                connectedClients: rooms[currentRoom].connectedClients,
-                maxClients: rooms[currentRoom].maxClients,
-            });
+                // Notify remaining users
+                io.to(currentRoom).emit('room-status', {
+                    id: currentRoom,
+                    connectedClients: rooms[currentRoom].connectedClients,
+                    maxClients: rooms[currentRoom].maxClients,
+                });
 
-            console.log(
-                `Client left room ${currentRoom} - Connected: ${rooms[currentRoom].connectedClients}`
-            );
+                console.log(
+                    `Mobile client left room ${currentRoom} - Connected: ${rooms[currentRoom].connectedClients}`
+                );
+            } else if (clientType === 'desktop') {
+                rooms[currentRoom].desktopConnected = false;
+                console.log(`Desktop client left room ${currentRoom}`);
+            }
 
-            // Clean up empty rooms after some time
-            if (rooms[currentRoom].connectedClients === 0) {
+            // Clean up empty rooms after some time (if desktop is gone and no mobile clients)
+            if (
+                !rooms[currentRoom].desktopConnected &&
+                rooms[currentRoom].connectedClients === 0
+            ) {
                 setTimeout(() => {
                     if (
                         rooms[currentRoom] &&
+                        !rooms[currentRoom].desktopConnected &&
                         rooms[currentRoom].connectedClients === 0
                     ) {
                         delete rooms[currentRoom];

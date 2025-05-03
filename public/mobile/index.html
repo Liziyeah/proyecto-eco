@@ -20,7 +20,6 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Rock & Sync - Mobile</title>
-        <script src="/socket.io/socket.io.js"></script>
     </head>
     <body>
         <div class="room-info">
@@ -35,10 +34,11 @@
             Room is full! Please try another room.
         </div>
 
-        <div id="controlArea" class="control-area">
-            <p>Touch and move to send coordinates</p>
-        </div>
-
+        <script
+            src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+            integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+            crossorigin="anonymous"
+        ></script>
         <script>
             // Get room ID from URL
             const params = new URLSearchParams(window.location.search);
@@ -64,8 +64,11 @@
                     connectionStatus.className =
                         'status-badge status-connected';
 
-                    // Join the room
-                    socket.emit('join-room', roomId);
+                    // Join the room as mobile client
+                    socket.emit('join-room', {
+                        roomId: roomId,
+                        type: 'mobile',
+                    });
                 });
 
                 socket.on('room-full', () => {
@@ -84,40 +87,6 @@
                     connectionStatus.className =
                         'status-badge status-disconnected';
                 });
-
-                // Handle touch events
-                const controlArea = document.getElementById('controlArea');
-
-                controlArea.addEventListener('touchstart', handleTouch);
-                controlArea.addEventListener('touchmove', handleTouch);
-                controlArea.addEventListener('touchend', () => {
-                    // Send touch end event
-                    socket.emit('coordenadas', {
-                        roomId: roomId,
-                        type: 'touchend',
-                        timestamp: Date.now(),
-                    });
-                });
-
-                function handleTouch(event) {
-                    event.preventDefault();
-
-                    const touch = event.touches[0];
-                    const rect = controlArea.getBoundingClientRect();
-
-                    // Calculate relative positions (0-1)
-                    const relativeX = (touch.clientX - rect.left) / rect.width;
-                    const relativeY = (touch.clientY - rect.top) / rect.height;
-
-                    // Send coordinates to server
-                    socket.emit('coordenadas', {
-                        roomId: roomId,
-                        type: event.type,
-                        x: relativeX,
-                        y: relativeY,
-                        timestamp: Date.now(),
-                    });
-                }
             }
         </script>
     </body>

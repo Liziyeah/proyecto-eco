@@ -4,8 +4,6 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Rock & Sync</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-        <script src="/socket.io/socket.io.js"></script>
     </head>
     <body>
         <h1>Rock & Sync</h1>
@@ -33,15 +31,14 @@
             <p>Waiting for mobile devices to connect...</p>
         </div>
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+        <script
+            src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+            integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+            crossorigin="anonymous"
+        ></script>
         <script>
-            // Get room ID from URL
-            const params = new URLSearchParams(window.location.search);
-            const roomId = params.get('roomId');
-
-            if (!roomId) {
-                console.error('No room ID found in URL');
-                document.body.innerHTML = '<h1>Error: No room ID found</h1>';
-            } else {
+            function createQRCode() {
                 // Display room ID
                 document.getElementById('roomId').textContent = roomId;
 
@@ -61,6 +58,17 @@
 
                 // Display mobile URL
                 document.getElementById('mobileUrl').textContent = mobileUrl;
+            }
+
+            // Get room ID from URL
+            const params = new URLSearchParams(window.location.search);
+            const roomId = params.get('roomId');
+
+            if (!roomId) {
+                console.error('No room ID found in URL');
+                document.body.innerHTML = '<h1>Error: No room ID found</h1>';
+            } else {
+                createQRCode();
 
                 // Connect to Socket.IO
                 const socket = io({
@@ -69,8 +77,11 @@
 
                 socket.on('connect', () => {
                     console.log('Connected to server');
-                    // Join the room
-                    socket.emit('join-room', roomId);
+                    // Join the room as desktop client
+                    socket.emit('join-room', {
+                        roomId: roomId,
+                        type: 'desktop',
+                    });
                 });
 
                 // Listen for room status updates
@@ -108,11 +119,6 @@
                         gameArea.innerHTML =
                             '<p>All players connected! Game ready to start.</p>';
                     }
-                });
-
-                socket.on('coordenadas', (data) => {
-                    console.log('Received coordinates:', data);
-                    // Handle coordinates data here
                 });
 
                 socket.on('disconnect', () => {
