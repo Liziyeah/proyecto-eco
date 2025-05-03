@@ -1,19 +1,3 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rock & Sync</title>
-</head>
-<body>
-    <div id="app">
-        
-    </div>
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-    <script type="module" src="app.js"></script>
-</body>
-</html> -->
-
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -34,6 +18,40 @@
             Room is full! Please try another room.
         </div>
 
+        <div id="playerInfo" style="display: none">
+            <h3>You are Player <span id="playerNumber">-</span></h3>
+        </div>
+
+        <div id="controlArea" style="display: none">
+            <h3>Waiting for game to start...</h3>
+            <div id="controlButtons">
+                <button
+                    id="leftButton"
+                    style="
+                        width: 45%;
+                        height: 150px;
+                        margin: 10px;
+                        font-size: 24px;
+                    "
+                    data-column="0"
+                >
+                    LEFT LANE
+                </button>
+                <button
+                    id="rightButton"
+                    style="
+                        width: 45%;
+                        height: 150px;
+                        margin: 10px;
+                        font-size: 24px;
+                    "
+                    data-column="1"
+                >
+                    RIGHT LANE
+                </button>
+            </div>
+        </div>
+
         <script
             src="https://cdn.socket.io/4.8.1/socket.io.min.js"
             integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
@@ -43,6 +61,7 @@
             // Get room ID from URL
             const params = new URLSearchParams(window.location.search);
             const roomId = params.get('roomId');
+            let playerId = -1; // Will be set by the server
 
             if (!roomId) {
                 document.body.innerHTML =
@@ -71,6 +90,42 @@
                     });
                 });
 
+                socket.on('player-assigned', (data) => {
+                    console.log('Assigned as player:', data.playerId);
+                    playerId = data.playerId;
+
+                    // Show player info and controls
+                    document.getElementById('playerInfo').style.display =
+                        'block';
+                    document.getElementById('playerNumber').textContent =
+                        playerId + 1;
+                    document.getElementById('controlArea').style.display =
+                        'block';
+
+                    // Set button colors based on player
+                    if (playerId === 0) {
+                        document.getElementById(
+                            'leftButton'
+                        ).style.backgroundColor = '#FF0000';
+                        document.getElementById(
+                            'rightButton'
+                        ).style.backgroundColor = '#FF0000';
+                    } else {
+                        document.getElementById(
+                            'leftButton'
+                        ).style.backgroundColor = '#0000FF';
+                        document.getElementById(
+                            'rightButton'
+                        ).style.backgroundColor = '#0000FF';
+                    }
+                });
+
+                socket.on('game-start', () => {
+                    // Update UI to show game is starting
+                    document.querySelector('#controlArea h3').textContent =
+                        'Game Running - Hit the buttons!';
+                });
+
                 socket.on('room-full', () => {
                     console.log('Room is full');
                     document.getElementById('errorMessage').style.display =
@@ -86,6 +141,28 @@
                     connectionStatus.textContent = 'Disconnected';
                     connectionStatus.className =
                         'status-badge status-disconnected';
+                });
+
+                // Set up button event handlers
+                document.addEventListener('click', (e) => {
+                    if (
+                        e.target &&
+                        e.target.matches('#controlButtons button')
+                    ) {
+                        const column = parseInt(e.target.dataset.column);
+
+                        // Send button press to server
+                        socket.emit('button-press', {
+                            column: column,
+                            playerId: playerId,
+                        });
+
+                        // Visual feedback
+                        e.target.style.opacity = '0.7';
+                        setTimeout(() => {
+                            e.target.style.opacity = '1';
+                        }, 100);
+                    }
                 });
             }
         </script>

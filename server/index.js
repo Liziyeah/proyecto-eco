@@ -46,6 +46,9 @@ app.get('/desktop', (req, res) => {
             id: newRoomId,
             connectedClients: 0,
             maxClients: 2,
+            desktopConnected: false,
+            mobileClients: [], // Track mobile client sockets
+            playerAssignments: {}, // Map socket IDs to player IDs
         };
 
         return res.redirect(`/desktop?roomId=${newRoomId}`);
@@ -57,6 +60,9 @@ app.get('/desktop', (req, res) => {
             id: roomId,
             connectedClients: 0,
             maxClients: 2,
+            desktopConnected: false,
+            mobileClients: [],
+            playerAssignments: {},
         };
     }
 
@@ -94,6 +100,8 @@ io.on('connection', (socket) => {
                 connectedClients: 0,
                 maxClients: 2,
                 desktopConnected: false,
+                mobileClients: [],
+                playerAssignments: {},
             };
         }
 
@@ -124,6 +132,14 @@ io.on('connection', (socket) => {
         socket.join(roomId);
         currentRoom = roomId;
         rooms[roomId].connectedClients++;
+        rooms[roomId].mobileClients.push(socket.id);
+
+        // Assign player ID (0 or 1)
+        const playerId = rooms[roomId].mobileClients.indexOf(socket.id);
+        rooms[roomId].playerAssignments[socket.id] = playerId;
+
+        // Tell the mobile client which player they are
+        socket.emit('player-assigned', { playerId: playerId });
 
         // Notify everyone in the room about the new count
         io.to(roomId).emit('room-status', {
@@ -133,8 +149,28 @@ io.on('connection', (socket) => {
         });
 
         console.log(
-            `Mobile client joined room ${roomId} - Connected: ${rooms[roomId].connectedClients}`
+            `Mobile client joined room ${roomId} as Player ${playerId} - Connected: ${rooms[roomId].connectedClients}`
         );
+    });
+
+    // Handle button presses from mobile clients
+    socket.on('button-press', (data) => {
+        if (!currentRoom) return;
+
+        // Forward the button press to the desktop client
+        io.to(currentRoom).emit('player-press', {
+            playerId: data.playerId,
+            column: data.column,
+        });
+    });
+
+    // Handle game start message from desktop
+    socket.on('game-start', () => {
+        if (!currentRoom) return;
+
+        // Notify all clients that the game is starting
+        io.to(currentRoom).emit('game-start');
+        console.log(`Game started in room ${currentRoom}`);
     });
 
     socket.on('disconnect', () => {
@@ -143,6 +179,17 @@ io.on('connection', (socket) => {
             // Only decrease counter for mobile clients
             if (clientType === 'mobile') {
                 rooms[currentRoom].connectedClients--;
+
+                // Remove from mobile clients list
+                const index = rooms[currentRoom].mobileClients.indexOf(
+                    socket.id
+                );
+                if (index > -1) {
+                    rooms[currentRoom].mobileClients.splice(index, 1);
+                }
+
+                // Remove player assignment
+                delete rooms[currentRoom].playerAssignments[socket.id];
 
                 // Notify remaining users
                 io.to(currentRoom).emit('room-status', {
