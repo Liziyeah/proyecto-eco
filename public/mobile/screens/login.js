@@ -1,8 +1,7 @@
-import { navigateTo, socket } from "../app.js";
-import {supabase} from "../../../server/services/supabase.service.js";
+import { navigateTo, socket } from '../app.js';
 
 export default function renderLogin() {
-    const appLogin = document.getElementById("app");
+    const appLogin = document.getElementById('app');
     appLogin.innerHTML = `
         <div class="container">
             <img src="https://raw.githubusercontent.com/SergioRP18/LOGO-Rock-Sync/8d5db4b18f637a0e113689fc5e10dff9166546d6/logo.svg" alt="Logo" class="logo" />
@@ -11,49 +10,39 @@ export default function renderLogin() {
         </div>
     `;
 
-    const loginButton = document.getElementById("login-button");
-    loginButton.addEventListener("click", async () => {
-        const username = document.getElementById("username").value;
+    const loginButton = document.getElementById('login-button');
+    loginButton.addEventListener('click', async () => {
+        const username = document.getElementById('username').value;
 
         if (username.length < 3) {
-            alert("El nombre de usuario debe tener al menos 3 caracteres.");
+            alert('El nombre de usuario debe tener al menos 3 caracteres.');
             return;
         }
 
         try {
-            const { data: existingUser, error: fetchError } = await supabase
-                .from("users")
-                .select("*")
-                .eq("username", username)
-                .single();
+            const response = await fetch('http://localhost:5050/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userInput: username }),
+            });
 
-            if (fetchError && fetchError.code !== "PGRST116") {
-                alert("Error al verificar el usuario.");
-                console.error(fetchError);
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || 'Error al crear el usuario');
                 return;
             }
 
-            if (existingUser) {
-                alert("El nombre de usuario ya está en uso. Por favor, elige otro.");
-                return;
-            }
+            alert('Usuario creado exitosamente.');
+            const userId = data.userId;
 
-            const { data, error } = await supabase
-                .from("users")
-                .insert([{ username }]);
-
-            if (error) {
-                alert("Error al crear el usuario.");
-                console.error(error);
-                return;
-            }
-
-            alert("Usuario creado exitosamente.");
-            socket.emit("user-created", { username });
-            navigateTo("/songs-selection", { username });
+            socket.emit('user-created', { username, userId });
+            navigateTo('/songs-selection', { username, userId });
         } catch (err) {
-            console.error("Error al conectar con Supabase:", err);
-            alert("Ocurrió un error inesperado.");
+            console.error('Error al conectar con el servidor:', err);
+            alert('Ocurrió un error inesperado.');
         }
     });
-};
+}
