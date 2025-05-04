@@ -136,9 +136,5 @@ socket.on('player-disconnected', (data) => {
         navigateTo('/');
     }
 });
-
-// Iniciar la aplicación
 renderCurrentScreen();
-
-// Exportar funciones y objetos necesarios
 export { navigateTo, socket, appState };
