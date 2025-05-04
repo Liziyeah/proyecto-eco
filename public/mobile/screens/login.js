@@ -1,6 +1,5 @@
 import { navigateTo, socket } from "../app.js";
-import { supabase } from "../../services/supabase.service.js";
-
+import {supabase} from "../../../server/services/supabase.service.js";
 
 export default function renderLogin() {
     const appLogin = document.getElementById("app");
@@ -56,9 +55,5 @@ export default function renderLogin() {
             console.error("Error al conectar con Supabase:", err);
             alert("Ocurrió un error inesperado.");
         }
-    });
-
-    socket.on("next-screen", (data) => {
-        navigateTo("/songs-selection", data);
     });
 };

@@ -30,14 +30,14 @@ function renderRoute(currentRoute) {
         
         case "/game":  
             clearScripts();
-            import("./screens/game.js").then((module) => {
+            import("/game").then((module) => {
                 module.default();
             });
             break;
         
         case "results":
             clearScripts();
-            import("./screens/results.js").then((module) => {
+            import("/results").then((module) => {
                 module.default();
             });
             break;
@@ -54,4 +54,19 @@ function navigateTo(path, data = {}) {
     renderRoute(route);
 };
 
-export { socket, navigateTo };
+async function makeRequest(url, method, body) {
+    const BASE_URL = "htttp://localhost:5050";
+    let response = await fetch(`${BASE_URL}${url}`, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    });
+
+    response = await response.json();
+
+    return response;
+}
+
+export { socket, navigateTo, makeRequest };

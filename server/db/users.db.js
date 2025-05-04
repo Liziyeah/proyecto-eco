@@ -13,7 +13,7 @@ const getAllUsers = async () => {
     
     let { data: users, error } = await supabase
     .from('users')
-    .select('id')
+    .select();
 
     if (error) {
         console.error("Error fetching users:", error);
@@ -25,7 +25,8 @@ const getAllUsers = async () => {
 const createUser = async (user) => {
     const { data, error } = await supabaseClient
         .from("users")
-        .insert([user]);
+        .insert([user])
+        .select();
 
     if (error) {
         console.error("Error creating user:", error);
@@ -35,11 +36,12 @@ const createUser = async (user) => {
     return data;
 };
 
-const updateUser = async (id, user) => {
+const updateUser = async (newData, userId) => {
     const { data, error } = await supabaseClient
         .from("users")
-        .update(user)
-        .eq("id", id);
+        .update(newData)
+        .eq("id", userId)
+        .select();
 
     if (error) {
         console.error("Error updating user:", error);
