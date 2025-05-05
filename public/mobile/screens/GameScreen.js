@@ -1,5 +1,3 @@
-// GameScreen.js - Pantalla principal de controles del juego
-
 export class GameScreen {
     constructor(container, socket, roomId, playerId) {
         this.container = container;

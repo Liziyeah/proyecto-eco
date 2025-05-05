@@ -14,7 +14,6 @@ const io = new Server(server, {
     },
 });
 
-// Room management
 const rooms = {};
 
 app.use(express.json());
