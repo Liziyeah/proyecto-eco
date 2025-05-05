@@ -7,15 +7,12 @@ export default class SocketManager {
     }
 
     connect() {
-        // Connect to Socket.IO
         this.socket = io({
             path: '/real-time',
         });
 
         this.socket.on('connect', () => {
             console.log('Connected to server');
-
-            // Trigger any connect handlers
             if (this.eventHandlers['connect']) {
                 this.eventHandlers['connect'].forEach((handler) => handler());
             }

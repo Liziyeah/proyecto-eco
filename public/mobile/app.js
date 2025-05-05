@@ -1,4 +1,3 @@
-// app.js - Principal controlador de la aplicación
 import { GameScreen } from './screens/GameScreen.js';
 
 class App {
@@ -18,10 +17,10 @@ class App {
             return;
         }
 
-        // Conectar con Socket.IO
         this.connectSocket();
     }
 
+    //
     connectSocket() {
         this.socket = io({
             path: '/real-time',
@@ -29,8 +28,6 @@ class App {
 
         this.socket.on('connect', () => {
             console.log('Conectado al servidor');
-
-            // Unirse a la sala como cliente móvil
             this.socket.emit('join-room', {
                 roomId: this.roomId,
                 type: 'mobile',
@@ -58,10 +55,7 @@ class App {
     }
 
     loadGameScreen(playerId) {
-        // Limpiar el contenedor
         this.appContainer.innerHTML = '';
-
-        // Crear e inicializar la pantalla del juego
         this.currentScreen = new GameScreen(
             this.appContainer,
             this.socket,
@@ -70,7 +64,6 @@ class App {
         );
         this.currentScreen.render();
     }
-
     showError(message) {
         this.appContainer.innerHTML = `
             <div class="error-container">
@@ -79,8 +72,6 @@ class App {
         `;
     }
 }
-
-// Iniciar la aplicación cuando el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', () => {
     new App();
 });
