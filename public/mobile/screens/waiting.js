@@ -1,6 +1,6 @@
 import { navigateTo } from "../app.js";
 
-export default function renderLoading() {
+export default function renderWaiting() {
     const appLoading = document.getElementById("app");
     appLoading.innerHTML = `
         <div class="container">
