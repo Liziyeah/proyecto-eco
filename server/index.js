@@ -60,9 +60,110 @@ app.get('/desktop', (req, res) => {
             connectedClients: 0,
             maxClients: 2,
             desktopConnected: false,
-            mobileClients: [],
-            playerAssignments: {},
+            mobileClients: [], // Track mobile client sockets
+            playerAssignments: {}, // Map socket IDs to player IDs
+            playerStatus: {}, // Track player ready status
+            selectedSong: null, // Store the selected song
+            selectedDifficulty: null, // Store the selected difficulty
         };
+
+        // Add this handler to the io.on('connection') block
+        socket.on('player-ready', (data) => {
+            const roomId = data.roomId;
+            const playerId = data.playerId;
+            const songId = data.songId;
+            const difficulty = data.difficulty;
+
+            if (!rooms[roomId]) return;
+
+            // Mark this player as ready
+            rooms[roomId].playerStatus[playerId] = 'ready';
+
+            // Store song selection (first player to ready up decides)
+            if (!rooms[roomId].selectedSong) {
+                rooms[roomId].selectedSong = songId;
+                rooms[roomId].selectedDifficulty = difficulty;
+            }
+
+            console.log(
+                `Player ${playerId} ready in room ${roomId} - Selected song ${songId} (${difficulty})`
+            );
+
+            // Check if all players are ready
+            const allPlayersReady =
+                Object.keys(rooms[roomId].playerAssignments).length ===
+                Object.keys(rooms[roomId].playerStatus).filter(
+                    (id) => rooms[roomId].playerStatus[id] === 'ready'
+                ).length;
+
+            if (allPlayersReady && rooms[roomId].connectedClients >= 2) {
+                // Notify everyone that all players are ready
+                io.to(roomId).emit('all-players-ready', {
+                    songId: rooms[roomId].selectedSong,
+                    difficulty: rooms[roomId].selectedDifficulty,
+                });
+
+                console.log(
+                    `All players ready in room ${roomId} - Starting game`
+                );
+            }
+        });
+
+        // Add API endpoint for songs (referenced in song-selection.js)
+        app.get('/songs', (req, res) => {
+            // Mock song data - in a real app, you'd fetch this from a database
+            const songs = [
+                {
+                    id: 1,
+                    title: 'Welcome to the Black Parade',
+                    difficulty: 'Medio',
+                    image: 'https://upload.wikimedia.org/wikipedia/en/7/72/My_Chemical_Romance_-_Welcome_to_the_Black_Parade_single_cover.jpg',
+                },
+                {
+                    id: 2,
+                    title: 'Helena',
+                    difficulty: 'Fácil',
+                    image: 'https://upload.wikimedia.org/wikipedia/en/d/d4/My_Chemical_Romance_-_Helena.png',
+                },
+                {
+                    id: 3,
+                    title: 'Famous Last Words',
+                    difficulty: 'Difícil',
+                    image: 'https://upload.wikimedia.org/wikipedia/en/1/19/Famous_Last_Words_single_cover.jpg',
+                },
+                {
+                    id: 4,
+                    title: 'Teenagers',
+                    difficulty: 'Fácil',
+                    image: 'https://upload.wikimedia.org/wikipedia/en/2/29/Teenagers_my_chemical_romance.jpg',
+                },
+                {
+                    id: 5,
+                    title: 'I’m Not Okay (I Promise)',
+                    difficulty: 'Medio',
+                    image: 'https://upload.wikimedia.org/wikipedia/en/1/16/I%27m_Not_Okay_%28I_Promise%29.jpg',
+                },
+            ];
+
+            res.json(songs);
+        });
+
+        // Add a simple user creation endpoint (referenced in login.js)
+        app.post('/users', express.json(), (req, res) => {
+            const { username } = req.body;
+
+            if (!username || username.length < 3) {
+                return res
+                    .status(400)
+                    .json({ error: 'Username must be at least 3 characters' });
+            }
+
+            // In a real app, you'd save this to a database
+            // For now, just generate a simple ID
+            const userId = Date.now().toString();
+
+            res.status(201).json({ id: userId, username });
+        });
     }
 
     res.sendFile(path.join(__dirname, '../public/desktop/index.html'));
