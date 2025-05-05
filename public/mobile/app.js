@@ -1,0 +1,86 @@
+// app.js - Principal controlador de la aplicación
+import { GameScreen } from './screens/GameScreen.js';
+
+class App {
+    constructor() {
+        this.appContainer = document.getElementById('app');
+        this.params = new URLSearchParams(window.location.search);
+        this.roomId = this.params.get('roomId');
+        this.socket = null;
+        this.currentScreen = null;
+
+        this.init();
+    }
+
+    init() {
+        if (!this.roomId) {
+            this.showError('Error: No se ha proporcionado un ID de sala');
+            return;
+        }
+
+        // Conectar con Socket.IO
+        this.connectSocket();
+    }
+
+    connectSocket() {
+        this.socket = io({
+            path: '/real-time',
+        });
+
+        this.socket.on('connect', () => {
+            console.log('Conectado al servidor');
+
+            // Unirse a la sala como cliente móvil
+            this.socket.emit('join-room', {
+                roomId: this.roomId,
+                type: 'mobile',
+            });
+        });
+
+        this.socket.on('player-assigned', (data) => {
+            console.log('Asignado como jugador:', data.playerId);
+            this.loadGameScreen(data.playerId);
+        });
+
+        this.socket.on('room-full', () => {
+            console.log('La sala está llena');
+            this.showError(
+                '¡La sala está llena! Por favor, prueba con otra sala.'
+            );
+        });
+
+        this.socket.on('disconnect', () => {
+            console.log('Desconectado del servidor');
+            if (this.currentScreen) {
+                this.currentScreen.updateConnectionStatus('Desconectado');
+            }
+        });
+    }
+
+    loadGameScreen(playerId) {
+        // Limpiar el contenedor
+        this.appContainer.innerHTML = '';
+
+        // Crear e inicializar la pantalla del juego
+        this.currentScreen = new GameScreen(
+            this.appContainer,
+            this.socket,
+            this.roomId,
+            playerId
+        );
+        this.currentScreen.render();
+    }
+
+    showError(message) {
+        this.appContainer.innerHTML = `
+            <div class="error-container">
+                <div class="error-message">${message}</div>
+            </div>
+        `;
+    }
+}
+
+// Iniciar la aplicación cuando el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', () => {
+    new App();
+});
