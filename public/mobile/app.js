@@ -1,6 +1,7 @@
 import renderLoading from "./screens/loading.js";
 import renderLogin from "./screens/login.js";
 import renderSongSelection from "./screens/song-selection.js";
+import renderGame from "./screens/game.js";
 
 const socket = io("/", { path: "/real-time" });
 
@@ -30,9 +31,7 @@ function renderRoute(currentRoute) {
         
         case "/game":  
             clearScripts();
-            import("/game").then((module) => {
-                module.default();
-            });
+            renderGame(currentRoute?.data);
             break;
         
         case "results":
@@ -54,19 +53,4 @@ function navigateTo(path, data = {}) {
     renderRoute(route);
 };
 
-async function makeRequest(url, method, body) {
-    const BASE_URL = "htttp://localhost:5050";
-    let response = await fetch(`${BASE_URL}${url}`, {
-        method: method,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-    });
-
-    response = await response.json();
-
-    return response;
-}
-
-export { socket, navigateTo, makeRequest };
+export { socket, navigateTo };
