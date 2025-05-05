@@ -7,6 +7,8 @@ let users = [
     },
 ];
 
+const supabaseClient = require('../services/supabase.service');
+
 const getAllUsers = async () => {
     let { data: users, error } = await supabase.from('users').select();
 

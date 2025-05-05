@@ -25,23 +25,20 @@ export default function renderLogin() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userInput: username }),
+                body: JSON.stringify({ username }),
             });
 
             const data = await response.json();
 
-            if (!response.ok) {
-                alert(data.message || 'Error al crear el usuario');
-                return;
-            }
-
             alert('Usuario creado exitosamente.');
-            const userId = data.userId;
+            const userId = data.id;
 
             socket.emit('user-created', { username, userId });
+            localStorage.setItem("username", username);
             navigateTo('/songs-selection', { username, userId });
+            
         } catch (err) {
-            console.error('Error al conectar con el servidor:', err);
+            console.error('Error al conectar con Supabase:', err);
             alert('Ocurrió un error inesperado.');
         }
     });

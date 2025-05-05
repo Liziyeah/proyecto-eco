@@ -1,13 +1,32 @@
 import { navigateTo } from "../app.js";
 
-export default function renderSongSelection() {
+export default async function renderSongSelection() {
     const appSongSelection = document.getElementById("app");
+
+    const response = await fetch("http://localhost:5050/songs", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    const responseJson = await response.json();
+
+    const username = localStorage.getItem("username");
+
+    const songList = responseJson.map(song => `
+        <div class="songs">
+            <span>${song.title}</span>
+            <img src="${song.image}" alt="image-song">
+            <span>${song.difficulty}</span>
+        </div>
+    `).join('');
+
     appSongSelection.innerHTML = `
         <div class="container">
             <div class="user-card">
-                <img src="#" alt="user-profile">
-                <span>username</span>
-                <span>score</span>
+                <img src="https://earth-rider.com/wp-content/uploads/2013/02/icon-rock-n-roll-guitarist.png" alt="user-profile">
+                <span>${username}</span>
             </div>
             <div class="selector-difficult">
                 <ul>
@@ -19,7 +38,7 @@ export default function renderSongSelection() {
             <div class="song">
                 <img src="#" alt="image-song">
                 <h1>Title</h1>
-                <button id="join-game">Juega Ahora</button>
+                <button id="join-game">Listo</button>
             </div>
             <div class="selector-mode">
                 <ul>
@@ -30,9 +49,7 @@ export default function renderSongSelection() {
             <div class="list-songs">
                 <h1>LISTA DE CANCIONES</h1>
                 <div class="songs">
-                    <span>title</span>
-                    <img src="#" alt="image-song">
-                    <span>dificultad</span>
+                    ${songList}
                 </div>
             </div>
         </div>
