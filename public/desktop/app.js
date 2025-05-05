@@ -1,8 +1,8 @@
 // App principal para el cliente desktop
-import renderWelcome from './screens/welcome.js';
-import renderWaiting from './screens/waiting.js';
-import renderGame from './screens/game.js';
-import renderResults from './screens/results.js';
+import renderWelcome from '../desktop/screens/welcome.js';
+import renderWaiting from '../desktop/screens/waiting.js';
+import renderGame from '../desktop/screens/game.js';
+import renderResults from '../desktop/screens/results.js';
 
 // Conexión a Socket.IO
 const socket = io('/', { path: '/real-time' });
