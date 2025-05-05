@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import renderWelcome from './screens/welcome.js';
 // import renderWaiting from './screens/waiting.js';
 import renderGame from './screens/game.js';
@@ -68,67 +69,88 @@ socket.on('game-ready', (data) => {
         appState.mode = '1vs1';
     } else {
         appState.mode = 'single';
+=======
+import SocketManager from './SocketManager.js';
+import WaitingScreen from './screens/WaitingScreen.js';
+import GameScreen from './screens/GameScreen.js';
+
+class App {
+    constructor() {
+        this.appElement = document.getElementById('app');
+        this.socketManager = new SocketManager();
+        this.currentScreen = null;
+        this.roomId = null;
+>>>>>>> mariana
     }
 
-    navigateTo('/waiting');
-});
+    init() {
+        // Get room ID from URL
+        const params = new URLSearchParams(window.location.search);
+        this.roomId = params.get('roomId');
 
-socket.on('start-game', () => {
-    navigateTo('/game');
-});
-
-socket.on('score-update', (data) => {
-    // Actualizar puntuación
-    appState.scores[data.playerId] = {
-        username: data.username,
-        score: data.score,
-        lastHit: data.noteHit,
-    };
-
-    // Si estamos en la pantalla del juego, actualizar la visualización
-    if (appState.currentScreen === '/game') {
-        const scoreElements = document.getElementsByClassName('player-score');
-        for (const element of scoreElements) {
-            const playerId = element.dataset.playerId;
-            if (playerId && appState.scores[playerId]) {
-                element.textContent = appState.scores[playerId].score;
-            }
+        if (!this.roomId) {
+            console.error('No room ID found in URL');
+            this.appElement.innerHTML = '<h1>Error: No room ID found</h1>';
+            return;
         }
 
-        // Mostrar feedback para el último acierto
-        if (data.noteHit) {
-            const feedbackElement = document.getElementById(
-                `feedback-${data.playerId}`
-            );
-            if (feedbackElement) {
-                feedbackElement.textContent = data.noteHit;
-                feedbackElement.className = `note-feedback ${data.noteHit}`;
+        // Connect to socket.io server
+        this.socket = this.socketManager.connect();
 
-                // Limpiar después de un momento
-                setTimeout(() => {
-                    feedbackElement.textContent = '';
-                    feedbackElement.className = 'note-feedback';
-                }, 1000);
+        // Join the room
+        this.socketManager.joinRoom(this.roomId, 'desktop');
+
+        // Show the waiting screen
+        this.showWaitingScreen();
+    }
+
+    showWaitingScreen() {
+        // Clean up previous screen if exists
+        this.cleanupCurrentScreen();
+
+        // Create and show waiting screen
+        this.currentScreen = new WaitingScreen(
+            this.socket,
+            this.roomId,
+            this.showGameScreen.bind(this)
+        );
+
+        this.appElement.appendChild(this.currentScreen.render());
+    }
+
+    showGameScreen() {
+        // Clean up previous screen if exists
+        this.cleanupCurrentScreen();
+
+        // Create and show game screen
+        this.currentScreen = new GameScreen(this.socket);
+        this.appElement.appendChild(this.currentScreen.render());
+    }
+
+    cleanupCurrentScreen() {
+        if (this.currentScreen) {
+            // Call destroy method if it exists to clean up event handlers
+            if (typeof this.currentScreen.destroy === 'function') {
+                this.currentScreen.destroy();
             }
+
+            // Remove from DOM
+            if (
+                this.currentScreen.element &&
+                this.currentScreen.element.parentNode
+            ) {
+                this.currentScreen.element.parentNode.removeChild(
+                    this.currentScreen.element
+                );
+            }
+
+            this.currentScreen = null;
         }
     }
-});
+}
 
-socket.on('game-results', (results) => {
-    appState.results = results;
-    navigateTo('/results');
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new App();
+    app.init();
 });
-
-socket.on('player-disconnected', (data) => {
-    alert(`¡El jugador ${data.username} se ha desconectado!`);
-
-    // Si estamos en una partida, volver a la pantalla de bienvenida
-    if (
-        appState.currentScreen === '/game' ||
-        appState.currentScreen === '/waiting'
-    ) {
-        navigateTo('/');
-    }
-});
-renderCurrentScreen();
-export { navigateTo, socket, appState };

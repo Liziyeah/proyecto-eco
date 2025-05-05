@@ -20,7 +20,6 @@ const io = new Server(httpServer, {
   },
 });
 
-// Room management
 const rooms = {};
 
 app.use(cors());
