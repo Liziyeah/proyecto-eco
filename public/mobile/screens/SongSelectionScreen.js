@@ -142,16 +142,20 @@ export class SongSelectionScreen {
 
                 // Update selected difficulty
                 this.selectedDifficulty = btn.dataset.difficulty;
+
+            
+            this.container.querySelector('#ready-button').disabled = false;
+        
             });
         });
 
         // Ready button
         const readyButton = this.container.querySelector('#ready-button');
         readyButton.addEventListener('click', () => {
-            if (!this.selectedSong) {
-                alert('Por favor selecciona una canción primero.');
-                return;
-            }
+            // if (!this.selectedSong) {
+            //     alert('Por favor selecciona una canción primero.');
+            //     return;
+            // }
 
             // Emit player ready event
             this.socket.emit('player-ready', {
