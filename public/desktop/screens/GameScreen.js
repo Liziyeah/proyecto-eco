@@ -3,8 +3,6 @@ export default class GameScreen {
         this.socket = socket;
         this.element = document.createElement('div');
         this.element.className = 'game-screen';
-
-        // Game variables
         this.gameRunning = false;
         this.gameCanvas = null;
         this.gameCtx = null;

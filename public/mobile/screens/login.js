@@ -34,9 +34,14 @@ export default function renderLogin() {
             const userId = data.id;
 
             socket.emit('user-created', { username, userId });
+<<<<<<< HEAD
             localStorage.setItem("username", username);
             navigateTo('/songs-selection', { username, userId });
             
+=======
+            localStorage.setItem('username', username);
+            navigateTo('/songs-selection', { username, userId });
+>>>>>>> 6315dfd2696790f7925d1e83b1c5be77a22a0ca2
         } catch (err) {
             console.error('Error al conectar con Supabase:', err);
             alert('Ocurrió un error inesperado.');
