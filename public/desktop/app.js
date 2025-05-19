@@ -32,10 +32,8 @@ class App {
     }
 
     showWaitingScreen() {
-        // Clean up previous screen if exists
         this.cleanupCurrentScreen();
 
-        // Create and show waiting screen
         this.currentScreen = new WaitingScreen(
             this.socket,
             this.roomId,
@@ -46,10 +44,8 @@ class App {
     }
 
     showGameScreen() {
-        // Clean up previous screen if exists
         this.cleanupCurrentScreen();
 
-        // Create and show game screen
         this.currentScreen = new GameScreen(this.socket);
         this.appElement.appendChild(this.currentScreen.render());
     }

@@ -16,38 +16,45 @@ renderRoute(route);
 
 function renderRoute(currentRoute) {
     switch (currentRoute?.path) {
-        case "/":
+        case '/':
             clearScripts();
             renderWaiting(currentRoute?.data);
             break;
-        
-        case "/login":
+
+        case '/login':
             clearScripts();
             renderLogin(currentRoute?.data);
             break;
-        
-        case "/songs-selection":
+
+        case '/songs-selection':
             clearScripts();
             renderSongSelection(currentRoute?.data);
             break;
-        
-        // case "/game":  
-        //     clearScripts();
-        //     import("/game").then((module) => {
-        //         module.default();
-        //     });
-        //     break;
-        
-        // case "results":
-        //     clearScripts();
-        //     import("/results").then((module) => {
-        //         module.default();
-        //     });
-        //     break;
-        
-            default:
-                const app = document.getElementById("app");
-                app.innerHTML = `<h1>404 - Not Found</h1><p>The page you are looking for does not exist.</p>`;
+
+        case '/game':
+            clearScripts();
+            import('./screens/GameScreen.js').then((module) => {
+                const GameScreen = module.default;
+                const gameScreen = new GameScreen(
+                    document.getElementById('app'),
+                    socket,
+                    currentRoute?.data.roomId,
+                    currentRoute?.data.playerId
+                );
+                gameScreen.render();
+            });
+            break;
+
+        case '/results':
+            clearScripts();
+            import('./screens/results.js').then((module) => {
+                module.default(currentRoute?.data);
+            });
+            break;
+
+        default:
+            const app = document.getElementById('app');
+            app.innerHTML = `<h1>404 - Not Found</h1><p>The page you are looking for does not exist.</p>`;
     }
 };
 
