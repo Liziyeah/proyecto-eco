@@ -1,7 +1,7 @@
-import { navigateTo, socket } from '../main.js';
+import { navigateTo } from '../main.js';
 
 export function renderResultsScreen(container, data) {
-    const { roomCode, username, playerId } = data;
+    const { username } = data;
 
     container.innerHTML = `
         <div class="results-screen">
@@ -71,7 +71,6 @@ export function renderResultsScreen(container, data) {
                         </button>
                     </div>
                 </form>
-                
                 <div id="form-status" class="form-status" style="display: none;"></div>
             </div>
         </div>
@@ -129,9 +128,9 @@ export function renderResultsScreen(container, data) {
         }
     }
 
-    // Function to redirect to main page
+    // Function to redirect to username (main) page
     function redirectToMainPage() {
-        window.location.href = '/mobile';
+        navigateTo('/main');
     }
 
     // Form submission handler
