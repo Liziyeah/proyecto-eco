@@ -10,7 +10,7 @@ export function renderScoreboardScreen(container, data = {}) {
     container.innerHTML = `
         <main class="scoreboard-screen">
             <div class="scoreboard-header">
-                <h1>🏆 Resultados Finales</h1>
+                <h1>Resultados Finales</h1>
                 ${
                     songInfo
                         ? `<p class="song-played">Canción: ${songInfo.title}</p>`
@@ -100,11 +100,11 @@ export function renderScoreboardScreen(container, data = {}) {
     function getPositionText(position) {
         switch (position) {
             case 1:
-                return '🥇 1er Lugar';
+                return '1er Lugar';
             case 2:
-                return '🥈 2do Lugar';
+                return '2do Lugar';
             case 3:
-                return '🥉 3er Lugar';
+                return '3er Lugar';
             default:
                 return `${position}° Lugar`;
         }

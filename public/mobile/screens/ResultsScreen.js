@@ -6,7 +6,7 @@ export function renderResultsScreen(container, data) {
     container.innerHTML = `
         <div class="results-screen">
             <div class="results-header">
-                <h1>📝 Información Personal</h1>
+                <h1>Información Personal</h1>
                 <p class="form-description">Por favor, comparte algunos datos para finalizar</p>
             </div>
             
@@ -64,10 +64,10 @@ export function renderResultsScreen(container, data) {
                     
                     <div class="form-actions">
                         <button type="submit" class="btn primary submit-btn">
-                            📤 Enviar Datos
+                            Enviar Datos
                         </button>
                         <button type="button" class="btn secondary skip-btn" id="skip-btn">
-                            ⏭️ Omitir
+                            Omitir
                         </button>
                     </div>
                 </form>
@@ -160,7 +160,7 @@ export function renderResultsScreen(container, data) {
             const submitBtn = document.querySelector('.submit-btn');
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.textContent = '📤 Enviando...';
+            submitBtn.textContent = 'Enviando...';
 
             showStatus('Enviando datos...', 'info');
 

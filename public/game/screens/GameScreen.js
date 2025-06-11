@@ -545,7 +545,7 @@ export function renderGameScreen(container, data) {
             readyElement.className = `player-ready-status ${
                 data.ready ? 'ready' : 'waiting'
             }`;
-            readyElement.textContent = data.ready ? '✓ Listo' : '⏳ Esperando';
+            readyElement.textContent = data.ready ? '✓ Listo' : 'Esperando';
         }
     });
 

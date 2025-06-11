@@ -70,7 +70,7 @@ export function renderLobbyScreen(container, data) {
                     <span class="player-name">${player.username}</span>
                     <span class="player-status ${
                         player.ready ? 'ready' : 'waiting'
-                    }">${player.ready ? '✓ Listo' : '⏳ Esperando'}</span>
+                    }">${player.ready ? '✓ Listo' : 'Esperando'}</span>
                 </li>
                 `
                 )
